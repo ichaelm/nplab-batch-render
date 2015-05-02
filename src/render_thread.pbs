@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# render_thread.pbs
+# 
+# Required by batch_render.sh
+# Designed to be run as a job on a PBS cluster
+# 
+# Parameters:
+#   MXS_DIR : the directory of the MXS files
+#   MXS_NAMES : the names of the MXS files, without the extension
+#   OUTPUT_DIR : the directory of the output images and log files
+# 
+# Outputs the render to a PNG file with the same name as each named MXS file,
+# in the output directory. Also outputs maxwell's logging info for each render.
+
+set -o nounset
+set -o errexit
+
+cd $PBS_O_WORKDIR
+
+# constants
+SL=14
+
+# logging
+echo "Running render_thread.pbs"
+echo "Started $(date +%F\ %T)"
+echo "MXS_DIR = $MXS_DIR"     # the mxs directory
+echo "MXS_NAMES = $MXS_NAMES"   # the mxs file name list, separated by :
+echo "OUTPUT_DIR = $OUTPUT_DIR"  # the output directory
+
+# load maxwell
+module load maxwell/3.1 
+
+# Set IFS temporarily
+OLDIFS="$IFS"
+export IFS=":"
+
+# Loop over each .mxs file name
+for MXS_NAME in $MXS_NAMES
+do
+  MXS_PATH="$MXS_DIR/$MXS_NAME.mxs"
+  echo "Rendering $MXS_PATH"
+  maxwell -nogui -node -nowait -trytoresume -mxs:"${MXS_PATH}" -res:64x64 \
+    -sl:$SL -mxi:"${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
+    -output:"${OUTPUT_DIR}/${MXS_NAME}.png" \
+    -dep:"/usr/local/maxwell-3.0/materials database/textures" \
+    > ${OUTPUT_DIR}/${MXS_NAME}_output.txt
+  rm "${OUTPUT_DIR}/${MXS_NAME}_recover.mxi"
+  echo "Completed $MXS_PATH"
+done
+
+echo "Done $(date +%F\ %T)"
+
+# Restore older IFS
+export IFS="$OLDIFS"
+
