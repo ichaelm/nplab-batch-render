@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# render_thread.pbs
+# render-thread.pbs
 # 
-# Required by batch_render.sh
 # Designed to be run as a job on a PBS cluster
 # 
 # Parameters:
@@ -21,7 +20,7 @@ cd $PBS_O_WORKDIR
 SL=14
 
 # logging
-echo "Running render_thread.pbs"
+echo "Running render-thread.pbs"
 echo "Started $(date +%F\ %T)"
 echo "MXS_FILE_LIST_PATH = $MXS_FILE_LIST_PATH"   # the mxs path list file
 echo "OUTPUT_DIR = $OUTPUT_DIR"  # the output directory

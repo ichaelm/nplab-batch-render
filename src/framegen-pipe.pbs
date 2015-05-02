@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# framegen-pipe.pbs
+# 
+# Requires nplab_framegen.py and batch-render-stream
+# Designed to be run as a job on a PBS cluster
+# 
+# Parameters:
+#   MAIN_DIR : Directory containing JSON and MXS files in expected structure
+#   FILES_PER_THREAD : Maximum number of files for each render thread
+#   MAX_NUM_THREADS : Maximum number of threads to run at once
+#   PROJNAME : (optional) Project name
+# 
+# Concurrently runs framegen to generate the MXS files for each frame, and
+# batch-render-stream to render each MXS file as they are created.
+
+set -o nounset
+set -o errexit
+
+cd $PBS_O_WORKDIR
+
+echo "MAIN_DIR = ${MAIN_DIR}"
+echo "FILES_PER_THREAD = $FILES_PER_THREAD"
+echo "MAX_NUM_THREADS = $MAX_NUM_THREADS"
+echo "PROJNAME = ${PROJNAME-render}"
+
+module load python
+
+python python-packages/nplab_framegen.py ${MAIN_DIR} | batch-render-stream $FILES_PER_THREAD $MAX_NUM_THREADS ${PROJNAME}

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+DIR=$( cd "$( dirname "$0" )" && pwd )
+
+if [ ! -d ~/bin ]
+then
+  mkdir ~/bin
+fi
+
+if [ ! -d ~/python-packages ]
+then
+  mkdir ~/python-packages
+fi
+
+if [[ ":$PYTHONPATH:" != *":$HOME/python-packages:"* ]]
+then
+  export PYTHONPATH=$HOME/python-packages:$PYTHONPATH
+  echo -e "\n# Automatically added by nplab-batch-render installer\nexport PYTHONPATH=~/python-packages:\$PYTHONPATH" >> ~/.bashrc
+fi
+
+cp ${DIR}/src/batch-render ~/bin/
+cp ${DIR}/src/batch-render-stream ~/bin/
+cp ${DIR}/src/render-thread.pbs ~/bin/
+cp ${DIR}/src/render-thread-stream.pbs ~/bin/
+cp ${DIR}/src/nplab_framegen.py ~/python-packages/
+cp ${DIR}/src/framegen-render ~/bin/
+cp ${DIR}/src/framegen-pipe.pbs ~/bin/
+

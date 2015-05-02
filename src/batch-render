@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# batch_render.sh
+# batch-render
 # 
 # usage:
-# ./batch_render.sh MXS_DIR OUTPUT_DIR NUM_NODES [PROJECT_NAME]
+# batch-render MXS_DIR OUTPUT_DIR NUM_NODES [PROJECT_NAME]
+# 
+# Requires render-thread.pbs
 # 
 # This script finds all the .mxs files in MXS_DIR, renders all of them with
 # Maxwell Renderer using as many cluster jobs as it can without exceeding
@@ -21,6 +23,7 @@ PROJNAME=${4-render} #optional
 
 # global variables
 THREAD_NUM=0
+DIR=$( cd "$( dirname "$0" )" && pwd )
 
 # function initializes temp file that lists MXS file paths
 InitMXSFileList () {
@@ -44,11 +47,11 @@ StartRenderJob () {
     -o ${OUTPUT_DIR}/${PROJNAME}_thread_${THREAD_NUM}_output.txt \
     -e ${OUTPUT_DIR}/${PROJNAME}_thread_${THREAD_NUM}_error.txt \
     -v MXS_FILE_LIST_PATH=${MXS_FILE_LIST_PATH},OUTPUT_DIR=${OUTPUT_DIR} \
-    ./render_thread.pbs
+    ${DIR}/render-thread.pbs
 }
 
 # init log
-echo "Running batch_render.sh"
+echo "Running batch-render"
 echo "Started $(date +%F\ %T)"
 
 # calculated constants

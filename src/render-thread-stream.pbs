@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# render_thread_stream.pbs
+# render-thread-stream.pbs
 # 
-# Required by batch_render_stream.sh
 # Designed to be run as a job on a PBS cluster
 # 
 # Parameters:
@@ -21,7 +20,7 @@ set -o errexit
 cd $PBS_O_WORKDIR
 
 # logging
-echo "Running render_thread_stream.pbs"
+echo "Running render-thread-stream.pbs"
 echo "Started $(date +%F\ %T)"
 echo "MXS_FILE_LIST_PATH = $MXS_FILE_LIST_PATH"
 echo "RESOLUTION = $RESOLUTION"
@@ -38,10 +37,10 @@ do
   MXS_NAME=${temp%.*}
   OUTPUT_DIR=${MXS_PATH%/*}
   echo "Rendering $MXS_PATH"
-  MAXWELL_LOG=maxwell -nogui -node -nowait -trytoresume -mxs:"${MXS_PATH}" \
+  MAXWELL_LOG=$(maxwell -nogui -node -nowait -trytoresume -mxs:"${MXS_PATH}" \
     -res:$RESOLUTION -sl:$SL -mxi:"${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
     -output:"${OUTPUT_DIR}/${MXS_NAME}.png" \
-    -dep:"/usr/local/maxwell-3.0/materials database/textures"
+    -dep:"/usr/local/maxwell-3.0/materials database/textures")
   rm "${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
     || {
       echo "ERROR: Failed $MXS_PATH"

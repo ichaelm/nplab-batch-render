@@ -1,9 +1,11 @@
 #!/bin/bash
 
-# batch_render_stream.sh
+# batch-render-stream
 # 
 # usage:
-# ./batch_render_stream.sh FILES_PER_THREAD MAX_NUM_THREADS [PROJECT_NAME] < STDIN
+# ./batch-render-stream FILES_PER_THREAD MAX_NUM_THREADS [PROJECT_NAME] < STDIN
+# 
+# Requires render-thread-stream.pbs
 # 
 # This script finds all the .mxs files in MXS_DIR, renders all of them with
 # Maxwell Renderer using as many cluster jobs as it can without exceeding
@@ -25,6 +27,7 @@ SL=14
 # global variables
 THREAD_NUM=0
 MY_TMP_DIR=$(mktemp -d tmp_batch_"$PROJNAME".XXXXXXXXXX)
+DIR=$( cd "$( dirname "$0" )" && pwd )
 
 # function gets temp file name for the given thread number
 GetThreadPath () {
@@ -55,7 +58,7 @@ StartRenderJob () {
     -o ${MY_TMP_DIR}/${PROJNAME}_thread_${THREAD_NUM}_output.txt \
     -e ${MY_TMP_DIR}/${PROJNAME}_thread_${THREAD_NUM}_error.txt \
     -v MXS_FILE_LIST_PATH=${MXS_FILE_LIST_PATH},RESOLUTION=$RESOLUTION,SL=$SL \
-    ./render_thread_stream.pbs
+    ${DIR}/render-thread-stream.pbs
 }
 
 ReadyForThread () {
@@ -85,7 +88,7 @@ WaitUntilReady () {
 }
 
 # init log
-echo "Running batch_render_stream.sh"
+echo "Running batch-render-stream"
 echo "Started $(date +%F\ %T)"
 
 # log info
