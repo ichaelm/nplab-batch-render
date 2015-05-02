@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# render_thread_stream.pbs
+# 
+# Required by batch_render_stream.sh
+# Designed to be run as a job on a PBS cluster
+# 
+# Parameters:
+#   MXS_FILE_LIST_PATH : the path to the file listing the paths of the MXS files
+#   RESOLUTION : the resolution for the render, in #x# format
+#   SL : the sample level for the render
+# 
+# Outputs each render to a PNG file with the same name as each listed MXS file,
+# in the same directory as each MXS file. Also outputs maxwell's logging info
+# for each render into the same directory as the file list.
+
+set -o nounset
+set -o errexit
+
+# working directory
+cd $PBS_O_WORKDIR
+
+# logging
+echo "Running render_thread_stream.pbs"
+echo "Started $(date +%F\ %T)"
+echo "MXS_FILE_LIST_PATH = $MXS_FILE_LIST_PATH"
+echo "RESOLUTION = $RESOLUTION"
+echo "SL = $SL"
+
+# load maxwell
+module load maxwell/3.1 
+
+# Loop over each .mxs file
+while read line
+do
+  MXS_PATH=$line
+  temp=${MXS_PATH##*/}
+  MXS_NAME=${temp%.*}
+  OUTPUT_DIR=${MXS_PATH%/*}
+  echo "Rendering $MXS_PATH"
+  MAXWELL_LOG=maxwell -nogui -node -nowait -trytoresume -mxs:"${MXS_PATH}" \
+    -res:$RESOLUTION -sl:$SL -mxi:"${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
+    -output:"${OUTPUT_DIR}/${MXS_NAME}.png" \
+    -dep:"/usr/local/maxwell-3.0/materials database/textures"
+  rm "${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
+    || {
+      echo "ERROR: Failed $MXS_PATH"
+      echo "==========Begin Maxwell output=========="
+      echo ${MAXWELL_LOG}
+      echo "===========End Maxwell output==========="
+      exit 1
+    }
+  echo "Completed $MXS_PATH"
+done < $MXS_FILE_LIST_PATH
+
+rm $MXS_FILE_LIST_PATH
+echo "Done $(date +%F\ %T)"
