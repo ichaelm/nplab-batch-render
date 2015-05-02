@@ -6,8 +6,7 @@
 # Designed to be run as a job on a PBS cluster
 # 
 # Parameters:
-#   MXS_DIR : the directory of the MXS files
-#   MXS_NAMES : the names of the MXS files, without the extension
+#   MXS_FILE_LIST_PATH : the path to the file listing the paths of the MXS files
 #   OUTPUT_DIR : the directory of the output images and log files
 # 
 # Outputs the render to a PNG file with the same name as each named MXS file,
@@ -24,21 +23,18 @@ SL=14
 # logging
 echo "Running render_thread.pbs"
 echo "Started $(date +%F\ %T)"
-echo "MXS_DIR = $MXS_DIR"     # the mxs directory
-echo "MXS_NAMES = $MXS_NAMES"   # the mxs file name list, separated by :
+echo "MXS_FILE_LIST_PATH = $MXS_FILE_LIST_PATH"   # the mxs path list file
 echo "OUTPUT_DIR = $OUTPUT_DIR"  # the output directory
 
 # load maxwell
 module load maxwell/3.1 
 
-# Set IFS temporarily
-OLDIFS="$IFS"
-export IFS=":"
-
-# Loop over each .mxs file name
-for MXS_NAME in $MXS_NAMES
+# Loop over each .mxs file
+while read line
 do
-  MXS_PATH="$MXS_DIR/$MXS_NAME.mxs"
+  MXS_PATH=$line
+  temp=${MXS_PATH##*/}
+  MXS_NAME=${temp%.*}
   echo "Rendering $MXS_PATH"
   maxwell -nogui -node -nowait -trytoresume -mxs:"${MXS_PATH}" -res:64x64 \
     -sl:$SL -mxi:"${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
@@ -47,10 +43,7 @@ do
     > ${OUTPUT_DIR}/${MXS_NAME}_output.txt
   rm "${OUTPUT_DIR}/${MXS_NAME}_recover.mxi"
   echo "Completed $MXS_PATH"
-done
+done < $MXS_FILE_LIST_PATH
 
+rm $MXS_FILE_LIST_PATH
 echo "Done $(date +%F\ %T)"
-
-# Restore older IFS
-export IFS="$OLDIFS"
-
