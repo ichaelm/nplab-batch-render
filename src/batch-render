@@ -16,10 +16,21 @@ set -o nounset
 set -o errexit
 
 # parameters
-MXS_DIR=$1 
-OUTPUT_DIR=$2
-NUM_NODES=$3
-PROJNAME=${4-render} #optional
+if [ "$1" == "-r" ]
+then
+  RECURSE=1
+  MXS_DIR=$2
+  OUTPUT_DIR=$3
+  NUM_NODES=$4
+  PROJNAME=${5-render} #optional
+else
+  RECURSE=0
+  MXS_DIR=$1
+  OUTPUT_DIR=$2
+  NUM_NODES=$3
+  PROJNAME=${4-render} #optional
+fi
+
 
 # global variables
 THREAD_NUM=0
@@ -46,7 +57,7 @@ StartRenderJob () {
     -l nodes=1:ppn=12,mem=10gb \
     -o ${OUTPUT_DIR}/${PROJNAME}_thread_${THREAD_NUM}_output.txt \
     -e ${OUTPUT_DIR}/${PROJNAME}_thread_${THREAD_NUM}_error.txt \
-    -v MXS_FILE_LIST_PATH=${MXS_FILE_LIST_PATH},OUTPUT_DIR=${OUTPUT_DIR} \
+    -v MXS_FILE_LIST_PATH=${MXS_FILE_LIST_PATH},OUTPUT_DIR=${OUTPUT_DIR},MXS_DIR=${MXS_DIR} \
     ${DIR}/render-thread.pbs
 }
 
@@ -55,7 +66,12 @@ echo "Running batch-render"
 echo "Started $(date +%F\ %T)"
 
 # calculated constants
-NUM_MXS_FILES=$(find ${MXS_DIR}/*.mxs -maxdepth 0 -type f | wc -l)
+if [ $RECURSE -eq 1 ]
+then
+  NUM_MXS_FILES=$(find ${MXS_DIR} -name *.mxs -type f | wc -l)
+else
+  NUM_MXS_FILES=$(find ${MXS_DIR} -name *.mxs -maxdepth 0 -type f | wc -l)
+fi
 NUM_MXS_FILES_PER_NODE=$(((NUM_MXS_FILES + (NUM_NODES-1))/NUM_NODES))
 
 # log info
@@ -74,8 +90,22 @@ then
   mkdir ${OUTPUT_DIR}
 fi
 
+for directory in $( find MXS_DIR -type d ! -name . )
+do
+  new_directory=$( echo ${directory} | sed "s%\./%${OUTPUT_DIR}/%" )
+  echo "mkdir -p \"${new_directory}\""
+  mkdir -p "${new_directory}"
+done
+
 # iterate over each mxs file
-for MXS_PATH in ${MXS_DIR}/*.mxs
+if [ $RECURSE -eq 1 ]
+then
+  MXS_PATHS=$(find ${MXS_DIR} -name *.mxs -type f)
+else
+  MXS_PATHS=$(find ${MXS_DIR} -name *.mxs -maxdepth 0 -type f)
+fi
+
+for MXS_PATH in ${MXS_PATHS}
 do 
   #temp=${MXS_PATH##*/}
   #MXS_NAME=${temp%.*}  

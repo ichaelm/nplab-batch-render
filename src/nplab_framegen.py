@@ -36,6 +36,46 @@ from glob import glob
 #   ...
 # ]
 
+# trace =
+# {
+#   "camera_trajectory" : {
+#     "motion_info" : {
+#       "motion_type" : "linear"
+#       "acceleration" : 0
+#       "init_velocity" : [x,y,z]
+#       "init_position" {xyz origin}
+#     },
+#     "sample_rate" : 120,
+#     "trace" : [
+#       {
+#         "zaxis"
+#         "origin"
+#         "xaxis"
+#         "yaxis"
+#       }
+#     ],
+#     "duration" : 1
+#   },
+#   "camera" : {
+#     "id"
+#     "position" : {
+#       "zaxis"
+#       "origin"
+#       "xaxis"
+#       "yaxis"
+#     }
+#   }
+#   "target" : {
+#     "id"
+#     "position" : {
+#       "zaxis"
+#       "origin"
+#       "xaxis"
+#       "yaxis"
+#     }
+#   }
+# }
+
 meters_per_inch = 0.0254
 
 def strip_suffix(s, suffix):
@@ -160,7 +200,10 @@ def main(main_dir):
                     trace = json.loads(trace_json)
                     trajectory = trace['camera_trajectory']
                     motion_info = trajectory['motion_info']
+                    velocity = motion_info['init_velocity']
+                    velocity_vec = to_vec(inches_to_meters(velocity))
                     framerate = trajectory['sample_rate']
+                    duration = trajectory['duration']
                     trace = trajectory['trace']
                     frame_index = 0
                     # output dir
@@ -172,8 +215,14 @@ def main(main_dir):
                         camera_pos = trace_pt['origin']
                         camera_up = trace_pt['zaxis']
                         camera_pos_vec = to_vec(inches_to_meters(camera_pos))
+                        camera_end_vec = camera_pos_vec + (velocity_vec * (1/framerate))
                         camera_up_vec = to_vec(camera_up)
-                        camera.setStep(0,camera_pos_vec,target_pos_vec,camera_up_vec,focalLength,fStop,0);
+                        fps = 120
+                        shutter = 1.0/240
+                        camera = scene.addCamera('name', 2, shutter, 0.1, 0.1, 100, 'CIRCULAR', 90, 1, fps, 1024, 1024, 1)
+                        camera.setStep(0,camera_pos_vec,target_pos_vec,camera_up_vec,focalLength,fStop,0); 
+                        camera.setStep(1,camera_end_vec,target_pos_vec,camera_up_vec,focalLength,fStop,1);
+                        camera.setActive()
                         new_mxs_file_name = scene_name + '_' + trace_file_name + '_frame_' + str(frame_index)
                         new_mxs_file = new_mxs_file_name + '.' + mxs_file_suffix
                         new_mxs_path = mxs_output_scene_trace_dir + new_mxs_file

@@ -7,6 +7,7 @@
 # Parameters:
 #   MXS_FILE_LIST_PATH : the path to the file listing the paths of the MXS files
 #   OUTPUT_DIR : the directory of the output images and log files
+#   MXS_DIR : the original root directory of the mxs files, useful for recursive renders
 # 
 # Outputs the render to a PNG file with the same name as each named MXS file,
 # in the output directory. Also outputs maxwell's logging info for each render.
@@ -24,6 +25,7 @@ echo "Running render-thread.pbs"
 echo "Started $(date +%F\ %T)"
 echo "MXS_FILE_LIST_PATH = $MXS_FILE_LIST_PATH"   # the mxs path list file
 echo "OUTPUT_DIR = $OUTPUT_DIR"  # the output directory
+echo "MXS_DIR = $MXS_DIR"
 
 # load maxwell
 module load maxwell/3.1 
@@ -34,13 +36,15 @@ do
   MXS_PATH=$line
   temp=${MXS_PATH##*/}
   MXS_NAME=${temp%.*}
+  FULL_MXS_DIR=${MXS_PATH%/*}
+  FULL_OUTPUT_DIR=${FULL_MXS_DIR/#$MXS_DIR/$OUTPUT_DIR}
   echo "Rendering $MXS_PATH"
   maxwell -nogui -node -nowait -trytoresume -mxs:"${MXS_PATH}" -res:64x64 \
-    -sl:$SL -mxi:"${OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
-    -output:"${OUTPUT_DIR}/${MXS_NAME}.png" \
+    -sl:$SL -mxi:"${FULL_OUTPUT_DIR}/${MXS_NAME}_recover.mxi" \
+    -output:"${FULL_OUTPUT_DIR}/${MXS_NAME}.png" \
     -dep:"/usr/local/maxwell-3.0/materials database/textures" \
-    > ${OUTPUT_DIR}/${MXS_NAME}_output.txt
-  rm "${OUTPUT_DIR}/${MXS_NAME}_recover.mxi"
+    > ${FULL_OUTPUT_DIR}/${MXS_NAME}_output.txt
+  rm "${FULL_OUTPUT_DIR}/${MXS_NAME}_recover.mxi"
   echo "Completed $MXS_PATH"
 done < $MXS_FILE_LIST_PATH
 
