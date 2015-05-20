@@ -8,8 +8,7 @@ CREATE TABLE Scenes(
   MXSLastModified DATETIME NOT NULL,
   MXSHash VARCHAR(255) NOT NULL,
   CTSLastModified DATETIME NOT NULL,
-  CTSHash VARCHAR(255) NOT NULL,
-  scene
+  CTSHash VARCHAR(255) NOT NULL
 );
 
 CREATE UNIQUE INDEX idx_Scenes_scene ON Scenes(scene);
@@ -29,7 +28,7 @@ CREATE TABLE Configs(
   configID INTEGER PRIMARY KEY,
   numTraces UNSIGNED INT NOT NULL,
   numFrames UNSIGNED INT NOT NULL,
-  JSONHash VARCHAR(255) NOT NULL,
+  JSONHash VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE Traces(
@@ -44,9 +43,9 @@ CREATE TABLE Traces(
   UNIQUE(cameraTargetID, configID, trace)
 );
 
-CREATE INDEX idx_Traces_cameraTargetID ON Traces(cameraTargetID)
-CREATE INDEX idx_Traces_configID ON Traces(configID)
-CREATE UNIQUE INDEX idx_Traces_cameraTargetID_configID_trace ON Traces(cameraTargetID_configID_trace)
+CREATE INDEX idx_Traces_cameraTargetID ON Traces(cameraTargetID);
+CREATE INDEX idx_Traces_configID ON Traces(configID);
+CREATE UNIQUE INDEX idx_Traces_cameraTargetID_configID_trace ON Traces(cameraTargetID, configID, trace);
 
 CREATE TABLE Frames(
   frameID INTEGER PRIMARY KEY,
