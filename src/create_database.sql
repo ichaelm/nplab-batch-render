@@ -1,6 +1,15 @@
 CREATE TABLE Scenes(
   sceneID INTEGER PRIMARY KEY,
-  scene VARCHAR(255) UNIQUE NOT NULL
+  scene VARCHAR(255) UNIQUE NOT NULL,
+  SKPLastModified DATETIME NOT NULL,
+  SKPHash VARCHAR(255) NOT NULL,
+  ThumbLastModified DATETIME NOT NULL,
+  ThumbHash VARCHAR(255) NOT NULL,
+  MXSLastModified DATETIME NOT NULL,
+  MXSHash VARCHAR(255) NOT NULL,
+  CTSLastModified DATETIME NOT NULL,
+  CTSHash VARCHAR(255) NOT NULL,
+  scene
 );
 
 CREATE UNIQUE INDEX idx_Scenes_scene ON Scenes(scene);
@@ -19,14 +28,29 @@ CREATE INDEX idx_CameraTargets_sceneID ON CameraTargets(sceneID);
 CREATE TABLE Configs(
   configID INTEGER PRIMARY KEY,
   numTraces UNSIGNED INT NOT NULL,
-  numFrames UNSIGNED INT NOT NULL
+  numFrames UNSIGNED INT NOT NULL,
+  JSONHash VARCHAR(255) NOT NULL,
 );
 
-CREATE TABLE FrameInfo(
-  frameID INTEGER PRIMARY KEY,
+CREATE TABLE Traces(
+  traceID INTEGER PRIMARY KEY,
   cameraTargetID INTEGER NOT NULL,
   configID INTEGER NOT NULL,
   trace UNSIGNED INT NOT NULL,
+  TraceLastModified DATETIME NOT NULL,
+  TraceHash VARCHAR(255) NOT NULL,
+  FOREIGN KEY(cameraTargetID) REFERENCES CameraTargets(cameraTargetID),
+  FOREIGN KEY(configID) REFERENCES Configs(configID),
+  UNIQUE(cameraTargetID, configID, trace)
+);
+
+CREATE INDEX idx_Traces_cameraTargetID ON Traces(cameraTargetID)
+CREATE INDEX idx_Traces_configID ON Traces(configID)
+CREATE UNIQUE INDEX idx_Traces_cameraTargetID_configID_trace ON Traces(cameraTargetID_configID_trace)
+
+CREATE TABLE Frames(
+  frameID INTEGER PRIMARY KEY,
+  traceID INTEGER NOT NULL,
   frame UNSIGNED INT NOT NULL,
   hasMXS BOOL NOT NULL,
   MXSLastModified DATETIME,
@@ -34,32 +58,11 @@ CREATE TABLE FrameInfo(
   hasImage BOOL NOT NULL,
   imageLastModified DATETIME,
   imageHash VARCHAR(255),
-  FOREIGN KEY(cameraTargetID) REFERENCES CameraTargets(cameraTargetID),
-  FOREIGN KEY(configID) REFERENCES Configs(configID),
-  UNIQUE(cameraTargetID, configID, trace, frame)
+  FOREIGN KEY(traceID) REFERENCES Traces(traceID),
+  UNIQUE(traceID, frame)
 );
 
-CREATE INDEX idx_FrameInfo_cameraTargetID ON FrameInfo(cameraTargetID);
-CREATE INDEX idx_FrameInfo_configID ON FrameInfo(configID);
-CREATE INDEX idx_FrameInfo_hasMXS ON FrameInfo(hasMXS);
-CREATE INDEX idx_FrameInfo_hasImage ON FrameInfo(hasImage);
-CREATE INDEX idx_FrameInfo_cameraTargetID_configID ON FrameInfo(cameraTargetID, configID);
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_trace ON FrameInfo(cameraTargetID, configID, trace);
-CREATE UNIQUE INDEX idx_FrameInfo_cameraTargetID_configID_trace_frame ON FrameInfo(cameraTargetID, configID, trace, frame);
---CREATE INDEX idx_FrameInfo_configID_trace ON FrameInfo(configID, trace);
---CREATE INDEX idx_FrameInfo_configID_trace_frame ON FrameInfo(configID, trace, frame);
-
-
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_hasMXS ON FrameInfo(cameraTargetID, configID, hasMXS);
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_trace_hasMXS ON FrameInfo(cameraTargetID, configID, trace, hasMXS);
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_trace_frame_hasMXS ON FrameInfo(cameraTargetID, configID, trace, frame, hasMXS);
---CREATE INDEX idx_FrameInfo_configID_hasMXS ON FrameInfo(configID, hasMXS);
---CREATE INDEX idx_FrameInfo_configID_trace_hasMXS ON FrameInfo(configID, trace, hasMXS);
---CREATE INDEX idx_FrameInfo_configID_trace_frame_hasMXS ON FrameInfo(configID, trace, frame, hasMXS);
-
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_hasImage ON FrameInfo(cameraTargetID, configID, hasImage);
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_trace_hasImage ON FrameInfo(cameraTargetID, configID, trace, hasImage);
---CREATE INDEX idx_FrameInfo_cameraTargetID_configID_trace_frame_hasImage ON FrameInfo(cameraTargetID, configID, trace, frame, hasImage);
---CREATE INDEX idx_FrameInfo_configID_hasImage ON FrameInfo(configID, hasImage);
---CREATE INDEX idx_FrameInfo_configID_trace_hasImage ON FrameInfo(configID, trace, hasImage);
---CREATE INDEX idx_FrameInfo_configID_trace_frame_hasImage ON FrameInfo(configID, trace, frame, hasImage);
+CREATE INDEX idx_Frames_hasMXS ON Frames(hasMXS);
+CREATE INDEX idx_Frames_hasImage ON Frames(hasImage);
+CREATE INDEX idx_Frames_traceID ON Frames(traceID);
+CREATE UNIQUE INDEX idx_Frames_traceID_frame ON Frames(traceID, frame);
