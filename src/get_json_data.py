@@ -2,6 +2,7 @@ import json
 from glob import glob
 from datetime import datetime
 import hashlib
+import os
  
 BLOCKSIZE = 65536
 hasher = hashlib.md5()
@@ -62,7 +63,7 @@ def get_mxs_scene_dirs(main_dir):
 
 def get_mxs_files(main_dir):
     mxs_dirs = get_mxs_scene_dirs(main_dir)
-    mxs_files = [(mxs_dir + os.path.basename(os.path.strip_suffix(mxs_dir, '/')) + mxs_suffix) for mxs_dir in mxs_dirs]
+    mxs_files = [(mxs_dir + os.path.basename(strip_suffix(mxs_dir, '/')) + mxs_file_suffix) for mxs_dir in mxs_dirs]
     return mxs_files
 
 def get_cts_files(main_dir):
@@ -88,11 +89,11 @@ def get_file_last_modified(file_path):
     return datetime.fromtimestamp(os.path.getmtime(file_path))
 
 def get_file_hash(file_path):
-    with open(file_path, 'rb') as file:
-        buf = file.read(BLOCKSIZE)
+    with open(file_path, 'rb') as f:
+        buf = f.read(BLOCKSIZE)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = file.read(BLOCKSIZE)
+            buf = f.read(BLOCKSIZE)
     return hasher.hexdigest()
 
 def filenames(file_paths):
