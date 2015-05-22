@@ -1,6 +1,5 @@
 import json
 import pymaxwell as pm
-from pprint import pprint
 import sys
 import os
 import shutil

@@ -57,12 +57,12 @@ def get_thumbs_files(main_dir):
     return thumbs_files
 
 def get_mxs_scene_dirs(main_dir):
-	mxs_dirs = glob(main_dir + mxs_dir_name + '/*/')
+    mxs_dirs = glob(main_dir + mxs_dir_name + '/*/')
     return mxs_dirs
 
 def get_mxs_files(main_dir):
-	mxs_dirs = get_mxs_scene_dirs(main_dir)
-	mxs_files = [(mxs_dir + os.path.basename(os.path.strip_suffix(mxs_dir, '/')) + mxs_suffix) for mxs_dir in mxs_dirs]
+    mxs_dirs = get_mxs_scene_dirs(main_dir)
+    mxs_files = [(mxs_dir + os.path.basename(os.path.strip_suffix(mxs_dir, '/')) + mxs_suffix) for mxs_dir in mxs_dirs]
     return mxs_files
 
 def get_cts_files(main_dir):
@@ -70,37 +70,37 @@ def get_cts_files(main_dir):
     return cts_files
 
 def get_trace_config_dirs(main_dir):
-	pass
+    pass
 
 def get_trace_files(main_dir):
     trace_files = glob(main_dir + trace_dir_name + '/*' + trace_file_suffix)
     return trace_files
-	
+    
 def get_framemxs_files(main_dir):
     framemxs_files = glob(main_dir + framemxs_dir_name + '/*' + mxs_file_suffix)
     return framemxs_files
-	
+    
 def get_image_files(main_dir):
     image_files = glob(main_dir + image_dir_name + '/*' + image_file_suffix)
     return image_files
 
 def get_file_last_modified(file_path):
-	return datetime.fromtimestamp(os.path.getmtime(file_path))
+    return datetime.fromtimestamp(os.path.getmtime(file_path))
 
 def get_file_hash(file_path):
-	with open(file_path, 'rb') as file:
-		buf = file.read(BLOCKSIZE)
-		while len(buf) > 0:
-			hasher.update(buf)
-			buf = file.read(BLOCKSIZE)
-	return hasher.hexdigest()
+    with open(file_path, 'rb') as file:
+        buf = file.read(BLOCKSIZE)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = file.read(BLOCKSIZE)
+    return hasher.hexdigest()
 
 def filenames(file_paths):
-	for file_path in file_paths:
-		yield os.path.splitext(os.path.basename(file_path))[0]
+    for file_path in file_paths:
+        yield os.path.splitext(os.path.basename(file_path))[0]
 
-def generate_skp_file_path
+#def generate_skp_file_path
 
 
-	
-	
+    
+    
