@@ -16,7 +16,7 @@ import pymaxwell as pm
 from glob import glob
 import sqlite3
 
-conn = sqlite3.connect('/home/mls278/database/nplab_images.db')
+conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
 conn.execute('pragma foreign_keys = on')
 cursor = conn.cursor()
 
@@ -149,3 +149,6 @@ def main(main_dir):
 					mxs_output_scene_trace_dir = mxs_output_scene_dir + trace_file_name + '/'
 					for trace_pt in trace:
 						"""
+						
+if __name__ == "__main__":
+    main(sys.argv[1])
