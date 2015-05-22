@@ -20,11 +20,11 @@ conn = sqlite3.connect('/home/mls278/database/nplab_images.db')
 conn.execute('pragma foreign_keys = on')
 cursor = conn.cursor()
 
-cursor.execute('''DELETE * FROM Scenes''')
-cursor.execute('''DELETE * FROM CameraTargets''')
-cursor.execute('''DELETE * FROM Configs''')
-cursor.execute('''DELETE * FROM Traces''')
-cursor.execute('''DELETE * FROM Frames''')
+cursor.execute('''DELETE FROM Scenes''')
+cursor.execute('''DELETE FROM CameraTargets''')
+cursor.execute('''DELETE FROM Configs''')
+cursor.execute('''DELETE FROM Traces''')
+cursor.execute('''DELETE FROM Frames''')
 conn.commit()
 
 
