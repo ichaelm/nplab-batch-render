@@ -77,7 +77,8 @@ def main(main_dir):
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', t)
 		conn.commit()
 		t = (scene_name,)
-		sceneID = cursor.fetchone('''SELECT sceneID FROM Scenes WHERE scene = ?''', t)[0]
+		cursor.execute('''SELECT sceneID FROM Scenes WHERE scene = ?''', t)
+		sceneID = cursor.fetchone()[0]
 		scene_names += [scene_name]
 		cts_file_path = cts_dir + cts_file
 		cts_json = open(cts_file_path).read()
