@@ -149,3 +149,6 @@ def main(main_dir):
 					mxs_output_scene_trace_dir = mxs_output_scene_dir + trace_file_name + '/'
 					for trace_pt in trace:
 						"""
+						
+if __name__ == "__main__":
+    main(sys.argv[1])
