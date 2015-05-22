@@ -3,11 +3,11 @@ from glob import glob
 from datetime import datetime
 import hashlib
 import os
- 
+
+#constants
 BLOCKSIZE = 65536
 hasher = hashlib.md5()
 
-#constants
 conf_file_name = 'conf.json'
 
 skp_dir_name = 'skp'
@@ -41,13 +41,6 @@ def ensure_suffix(s, suffix):
     if not s.endswith(suffix):
         s = s + suffix
     return s
-
-def get_confs(main_dir):
-    conf_dir = main_dir
-    conf_file_path = conf_dir + conf_file_name
-    confs_json = open(conf_file_path).read()
-    confs = json.loads(confs_json)
-    return confs
 
 def get_skp_files(main_dir):
     skp_files = glob(main_dir + skp_dir_name + '/*' + skp_file_suffix)
@@ -85,6 +78,18 @@ def get_image_files(main_dir):
     image_files = glob(main_dir + image_dir_name + '/*' + image_file_suffix)
     return image_files
 
+def get_scene_skp_path(main_dir, scene):
+    return main_dir + skp_dir_name + '/' + str(scene) + skp_file_suffix
+
+def get_scene_thumbs_path(main_dir, scene):
+    return main_dir + thumbs_dir_name + '/' + str(scene) + image_file_suffix
+
+def get_scene_mxs_path(main_dir, scene):
+    return main_dir + mxs_dir_name + '/' + str(scene) + '/' + scene + mxs_file_suffix
+
+def get_scene_cts_path(main_dir, scene):
+    return main_dir + cts_dir_name + '/' + str(scene) + cts_file_suffix
+
 def get_file_last_modified(file_path):
     return datetime.fromtimestamp(os.path.getmtime(file_path))
 
@@ -96,11 +101,82 @@ def get_file_hash(file_path):
             buf = f.read(BLOCKSIZE)
     return hasher.hexdigest()
 
-def filenames(file_paths):
-    for file_path in file_paths:
-        yield os.path.splitext(os.path.basename(file_path))[0]
+class FileInfo:
+    def __init__(self, _last_modified, _hash):
+        self.last_modified = _last_modified
+        self.hash = _hash
+        
+def get_file_info(file_path):
+    return FileInfo(get_file_last_modified(file_path), get_file_hash(file_path))
 
-#def generate_skp_file_path
+def filenames(file_paths, extension):
+    return [os.path.splitext(strip_suffix(file_path, extension))[0] for file_path in file_paths]
+
+def get_scenes_with_skp(main_dir):
+    return filenames(get_skp_files(main_dir), skp_file_suffix)
+
+def get_scenes_with_thumbs(main_dir):
+    return filenames(get_thumbs_files(main_dir), image_file_suffix)
+
+def get_scenes_with_mxs(main_dir):
+    return filenames(get_mxs_files(main_dir), mxs_file_suffix)
+
+def get_scenes_with_cts(main_dir):
+    return filenames(get_cts_files(main_dir), cts_file_suffix)
+
+def get_scene_skp_info(main_dir, scene):
+    return get_file_info(get_scene_skp_path(main_dir, scene))
+
+def get_scene_thumbs_info(main_dir, scene):
+    return get_file_info(get_scene_thumbs_path(main_dir, scene))
+
+def get_scene_mxs_info(main_dir, scene):
+    return get_file_info(get_scene_mxs_path(main_dir, scene))
+
+def get_scene_cts_info(main_dir, scene):
+    return get_file_info(get_scene_cts_path(main_dir, scene))
+
+def get_confs(main_dir):
+    conf_dir = main_dir
+    conf_file_path = conf_dir + conf_file_name
+    confs_json = open(conf_file_path).read()
+    confs = json.loads(confs_json)
+    for conf in confs:
+        h = conf.__hash__()
+        conf['hash'] = h
+    return confs
+
+def get_scene_camera_target_pairs(main_dir, scene):
+    cts_path = get_scene_cts_path(main_dir, scene)
+    cts_json = open(cts_path).read()
+    cts = json.loads(cts_json)
+    pairs = []
+    for ct in cts['pairs']:
+        pairs.append((ct['camera_id'], ct['target_id']))
+    return pairs
+
+def get_trace_path(main_dir, config, scene, camera, target, direction):
+    return main_dir + trace_dir_name + '/' + 'config_' + str(config) + '/' + str(scene) + '/' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + trace_file_suffix
+
+def get_trace_info(main_dir, config, scene, camera, target, direction):
+    return get_file_info(get_trace_path(main_dir, config, scene, camera, target, direction))
+
+def get_frame_mxs_path(main_dir, config, scene, camera, target, direction, frame):
+    pass
+
+def get_frame_mxs_info(main_dir, config, scene, camera, target, direction, frame):
+    return get_file_info(get_frame_mxs_path(main_dir, config, scene, camera, target, direction, frame))
+
+def get_image_path(main_dir, config, scene, camera, target, direction, frame):
+    pass
+
+def get_image_info(main_dir, config, scene, camera, target, direction, frame):
+    return get_file_info(get_image_path(main_dir, config, scene, camera, target, direction, frame))
+
+
+
+
+
 
 
     
