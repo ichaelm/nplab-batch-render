@@ -16,7 +16,7 @@ import pymaxwell as pm
 from glob import glob
 import sqlite3
 
-conn = sqlite3.connect('/home/mls278/database/nplab_images.db')
+conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
 conn.execute('pragma foreign_keys = on')
 cursor = conn.cursor()
 
