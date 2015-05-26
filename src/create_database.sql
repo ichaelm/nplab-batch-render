@@ -3,12 +3,15 @@ CREATE TABLE Scenes(
   scene VARCHAR(255) UNIQUE NOT NULL,
   SKPLastModified DATETIME NOT NULL,
   SKPHash VARCHAR(255) NOT NULL,
-  ThumbLastModified DATETIME NOT NULL,
-  ThumbHash VARCHAR(255) NOT NULL,
-  MXSLastModified DATETIME NOT NULL,
-  MXSHash VARCHAR(255) NOT NULL,
-  CTSLastModified DATETIME NOT NULL,
-  CTSHash VARCHAR(255) NOT NULL
+  hasThumb BOOL NOT NULL,
+  ThumbLastModified DATETIME,
+  ThumbHash VARCHAR(255),
+  hasMXS BOOL NOT NULL,
+  MXSLastModified DATETIME,
+  MXSHash VARCHAR(255),
+  hasCTS BOOL NOT NULL,
+  CTSLastModified DATETIME,
+  CTSHash VARCHAR(255)
 );
 
 CREATE UNIQUE INDEX idx_Scenes_scene ON Scenes(scene);
@@ -36,8 +39,9 @@ CREATE TABLE Traces(
   cameraTargetID INTEGER NOT NULL,
   configID INTEGER NOT NULL,
   trace UNSIGNED INT NOT NULL,
-  TraceLastModified DATETIME NOT NULL,
-  TraceHash VARCHAR(255) NOT NULL,
+  hasTrace BOOL NOT NULL,
+  traceLastModified DATETIME,
+  traceHash VARCHAR(255),
   FOREIGN KEY(cameraTargetID) REFERENCES CameraTargets(cameraTargetID),
   FOREIGN KEY(configID) REFERENCES Configs(configID),
   UNIQUE(cameraTargetID, configID, trace)

@@ -91,15 +91,21 @@ def get_scene_cts_path(main_dir, scene):
     return main_dir + cts_dir_name + '/' + str(scene) + cts_file_suffix
 
 def get_file_last_modified(file_path):
-    return datetime.fromtimestamp(os.path.getmtime(file_path))
+    if os.path.isfile(file_path):
+        return datetime.fromtimestamp(os.path.getmtime(file_path))
+    else:
+        return None
 
 def get_file_hash(file_path):
-    with open(file_path, 'rb') as f:
-        buf = f.read(BLOCKSIZE)
-        while len(buf) > 0:
-            hasher.update(buf)
+    if os.path.isfile(file_path):
+        with open(file_path, 'rb') as f:
             buf = f.read(BLOCKSIZE)
-    return hasher.hexdigest()
+            while len(buf) > 0:
+                hasher.update(buf)
+                buf = f.read(BLOCKSIZE)
+        return hasher.hexdigest()
+    else:
+        return None
 
 class FileInfo:
     def __init__(self, _last_modified, _hash):

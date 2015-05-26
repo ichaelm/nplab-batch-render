@@ -1,20 +1,6 @@
-
-#import sqlite3
-#
-#import file_structure_constants
-#
-#conn = sqlite3.connect('/home/mls278/database/nplab_images.db')
-#conn.execute('pragma foreign_keys = on')
-#cursor = conn.cursor()
-#
-#confs_json = open(conf_file_path).read()
-
-import json
 import sys
-import os
-import pymaxwell as pm
-from glob import glob
 import sqlite3
+import get_json_data as files
 
 conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
 conn.execute('pragma foreign_keys = on')
@@ -27,129 +13,83 @@ cursor.execute('''DELETE FROM Traces''')
 cursor.execute('''DELETE FROM Frames''')
 conn.commit()
 
-
-def strip_suffix(s, suffix):
-    if s.endswith(suffix):
-        s = s[:-(len(suffix)+1)]
-    return s
-
-def ensure_suffix(s, suffix):
-    if not s.endswith(suffix):
-        s = s + suffix
-    return s
-
 def main(main_dir):
 
-    # constants
-    conf_file_name = 'conf.json'
-    cts_dir_name = 'cts'
-    mxs_dir_name = 'mxs'
-    trace_dir_name = 'trace'
-    mxs_output_dir_name = 'mxs_frames'
-    cts_file_suffix = 'cts.json'
-    mxs_file_suffix = 'mxs'
-    trace_file_suffix = 'ss.json'
+    main_dir = files.ensure_suffix(main_dir, '/')
 
-    main_dir = ensure_suffix(main_dir, '/')
-    conf_dir = main_dir
-    cts_dir = main_dir + cts_dir_name + '/'
-    mxs_dir = main_dir + mxs_dir_name + '/'
-    trace_dir = main_dir + trace_dir_name + '/'
-    mxs_output_dir = main_dir + mxs_output_dir_name + '/'
-    conf_file_path = conf_dir + conf_file_name
-
-    # make output dir
-    os.mkdir(mxs_output_dir)
-
-    # confs
-    confs_json = open(conf_file_path).read()
-    confs = json.loads(confs_json)
-
-    cts_files = pm.getFilesFromPath(cts_dir,cts_file_suffix)
-
-    scene_names = []
-    ctss = {}
-
-    for cts_file in cts_files:
-        scene_name = strip_suffix(cts_file, cts_file_suffix)
-        t = (scene_name, 'u', 'u', 'u', 'u', 'u', 'u', 'u', 'u')
-        cursor.execute('''INSERT INTO Scenes(scene, SKPLastModified, SKPHash, ThumbLastModified, ThumbHash, MXSLastModified, MXSHash, CTSLastModified, CTSHash)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', t)
-        conn.commit()
-        t = (scene_name,)
-        cursor.execute('''SELECT sceneID FROM Scenes WHERE scene = ?''', t)
-        sceneID = cursor.fetchone()[0]
-        scene_names += [scene_name]
-        cts_file_path = cts_dir + cts_file
-        cts_json = open(cts_file_path).read()
-        cts = json.loads(cts_json)
-        cameras = cts['cameras']
-        targets = cts['targets']
-        pairs = cts['pairs']
-        pair_dicts = [] # [ { "camera":<>, "target":<> } ...]
-        camera_dict = {}
-        target_dict = {}
-        for camera in cameras:
-            camera_id = camera['id']
-            camera_dict[camera_id] = camera
-        for target in targets:
-            target_id = target['id']
-            target_dict[target_id] = target
-        for pair in pairs:
-            camera_id = pair['camera_id']
-            target_id = pair['target_id']
-            t = (sceneID, camera_id, target_id)
-            cursor.execute('''INSERT INTO CameraTargets(sceneID, camera, target)
-            VALUES (?, ?, ?)''', t)
-            conn.commit()
-            pair_dicts += [{'camera': camera_dict[camera_id],
-                            'target': target_dict[target_id]}]
-        ctss[scene_name] = pair_dicts
-        # TODO: confirm mxs file exists
-"""
-    for conf_index in xrange(len(confs)):
-        conf = confs[conf_index]
+    # update all confs
+    confs = files.get_confs(main_dir)
+    for i, conf in enumerate(confs):
         num_directions = conf['direction']['options']['ndirections']
-        speed = conf['speed']
         duration = conf['duration']
         sample_rate = conf['sample_rate']
-        trace_conf_dir = trace_dir + 'config_' + str(conf_index) + '/'
-        for scene_name in scene_names:
-            mxs_file = scene_name + '.' + mxs_file_suffix
-            mxs_scene_dir = mxs_dir + scene_name + '/'
-            mxs_path = mxs_scene_dir + mxs_file
-            mxs_output_scene_dir = mxs_output_dir + scene_name + '/'
-            trace_conf_scene_dir = trace_conf_dir + scene_name + '/'
-            found_trace_files = pm.getFilesFromPath(trace_conf_scene_dir,trace_file_suffix)
-            pairs = ctss[scene_name]
-            expected_trace_files = []
-            for pair in pairs:
-                camera_json = pair['camera']
-                target_json = pair['target']
-                camera_id = camera_json['id']
-                target_id = target_json['id']
-                for direction_index in xrange(num_directions):
-                    trace_file_name = (str(camera_id) + '_' +
-                                       str(target_id) + '_' +
-                                       str(direction_index) + '_' +
-                                       str(0)) # TODO: does not parse speeds yet
-                    trace_file = trace_file_name + '.' + trace_file_suffix
-                    expected_trace_files += [trace_file]
-                    # TODO: compare found vs expected files
-                    trace_file_path = trace_conf_scene_dir + trace_file
-                    trace_json = open(trace_file_path).read()
-                    trace = json.loads(trace_json)
-                    trajectory = trace['camera_trajectory']
-                    motion_info = trajectory['motion_info']
-                    velocity = motion_info['init_velocity']
-                    framerate = trajectory['sample_rate']
-                    duration = trajectory['duration']
-                    trace = trajectory['trace']
-                    frame_index = 0
-                    # output dir
-                    mxs_output_scene_trace_dir = mxs_output_scene_dir + trace_file_name + '/'
-                    for trace_pt in trace:
-                        """
-                        
+        num_frames = int(duration * sample_rate)
+        t = (i, num_directions, num_frames, conf.__hash__())
+        cursor.execute('''INSERT INTO Configs(configID, numTraces, numFrames, JSONHash) VALUES (?, ?, ?, ?)''', t)
+    conn.commit()
+    
+    # update all scenes
+    scenes_with_skp = files.get_scenes_with_skp(main_dir)
+    scenes_with_thumb = files.get_scenes_with_thumbs(main_dir)
+    scenes_with_mxs = files.get_scenes_with_mxs(main_dir)
+    scenes_with_cts = files.get_scenes_with_cts(main_dir)
+    scenes = set(scenes_with_skp + scenes_with_thumb + scenes_with_mxs + scenes_with_cts) # all scenes
+    scene_ids = {}
+    for scene in scenes:
+        skp_info = files.get_scene_skp_info(main_dir, scene)
+        thumb_info = files.get_scene_thumbs_info(main_dir, scene)
+        mxs_info = files.get_scene_mxs_info(main_dir, scene)
+        cts_info = files.get_scene_cts_info(main_dir, scene)
+        t = (scene, skp_info.last_modified, skp_info.hash, thumb_info.hash != None, thumb_info.last_modified, thumb_info.hash, mxs_info.hash != None, mxs_info.last_modified, mxs_info.hash, cts_info.hash != None, cts_info.last_modified, cts_info.hash)
+        cursor.execute('''INSERT INTO Scenes(scene, SKPLastModified, SKPHash, hasThumb, ThumbLastModified, ThumbHash, hasMXS, MXSLastModified, MXSHash, hasCTS, CTSLastModified, CTSHash)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', t)
+        conn.commit()
+        t = (scene,)
+        cursor.execute('''SELECT sceneID FROM Scenes WHERE scene = ?''', t)
+        sceneID = cursor.fetchone()[0]
+        scene_ids[scene] = sceneID
+    
+    # update all cts
+    enumerated_ctss = {}
+    for scene in scenes_with_cts:
+        ct_pairs = files.get_scene_camera_target_pairs(main_dir, scene)
+        for camera, target in ct_pairs:
+            t = (scene_ids[scene], camera, target)
+            cursor.execute('''INSERT INTO CameraTargets(sceneID, camera, target) VALUES (?, ?, ?)''')
+            conn.commit()
+            cursor.execute('''SELECT cameraTargetID FROM CameraTargets WHERE sceneID = ? AND camera = ? AND target = ?''', t)
+            ctsID = cursor.fetchone()[0]
+            t = (scene, camera, target)
+            enumerated_ctss[ctsID] = t
+            
+    # update all traces
+    enumerated_traces = []
+    for ctsID, (scene, camera, target) in enumerated_ctss.iteritems():
+        for confID, conf in enumerate(confs):
+            for direction in xrange(conf['direction']['options']['ndirections']):
+                trace_info = files.get_trace_info(main_dir, confID, scene, camera, target, direction)
+                t = (ctsID, confID, direction, trace_info.hash != None, trace_info.last_modified, trace_info.hash)
+                cursor.execute('''INSERT INTO Traces(cameraTargetID, configID, trace, hasTrace, TraceLastModified, TraceHash) VALUES (?, ?, ?, ?, ?, ?)''')
+                conn.commit()
+                t = (ctsID, confID, direction)
+                cursor.execute('''SELECT traceID FROM Traces WHERE cameraTargetID = ? AND confID = ? AND trace = ?''', t)
+                traceID = cursor.fetchone()[0]
+                enumerated_traces.append((traceID, t))
+    
+    # update all frames
+    for traceID, (ctsID, confID, direction) in enumerated_traces:
+        conf = confs[confID]
+        duration = conf['duration']
+        sample_rate = conf['sample_rate']
+        num_frames = int(duration * sample_rate)
+        cts = enumerated_traces[ctsID]
+        (scene, camera, target) = cts
+        for frame in xrange(num_frames):
+            framemxs_info = files.get_frame_mxs_info(main_dir, confID, scene, camera, target, direction, frame)
+            image_info = files.get_image_info(main_dir, confID, scene, camera, target, direction, frame)
+            t = (traceID, frame, framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, image_info.hash != None, image_info.last_modified, image_info.hash)
+            cursor.execute('''INSERT INTO Frames(traceID, frame, hasMXS, MXSLastModified, MXSHash, hasImage, imageLastModified, imageHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', t)
+            cursor.commit()
+
 if __name__ == "__main__":
     main(sys.argv[1])
