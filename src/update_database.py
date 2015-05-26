@@ -6,12 +6,23 @@ conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
 conn.execute('pragma foreign_keys = on')
 cursor = conn.cursor()
 
-cursor.execute('''DELETE FROM Scenes''')
-cursor.execute('''DELETE FROM CameraTargets''')
-cursor.execute('''DELETE FROM Configs''')
-cursor.execute('''DELETE FROM Traces''')
 cursor.execute('''DELETE FROM Frames''')
+cursor.execute('''DELETE FROM Traces''')
+cursor.execute('''DELETE FROM CameraTargets''')
+cursor.execute('''DELETE FROM Scenes''')
+cursor.execute('''DELETE FROM Configs''')
+
+
 conn.commit()
+
+def hash_dict(d):
+    f = []
+    for k, v in d.iteritems():
+        try:
+            f.append(hash((k, hash(v))))
+        except:
+            f.append((k, hash_dict(v)))
+    return hash(frozenset(f))
 
 def main(main_dir):
 
@@ -24,7 +35,7 @@ def main(main_dir):
         duration = conf['duration']
         sample_rate = conf['sample_rate']
         num_frames = int(duration * sample_rate)
-        t = (i, num_directions, num_frames, conf.__hash__())
+        t = (i, num_directions, num_frames, hash_dict(conf))
         cursor.execute('''INSERT INTO Configs(configID, numTraces, numFrames, JSONHash) VALUES (?, ?, ?, ?)''', t)
     conn.commit()
     
@@ -55,7 +66,7 @@ def main(main_dir):
         ct_pairs = files.get_scene_camera_target_pairs(main_dir, scene)
         for camera, target in ct_pairs:
             t = (scene_ids[scene], camera, target)
-            cursor.execute('''INSERT INTO CameraTargets(sceneID, camera, target) VALUES (?, ?, ?)''')
+            cursor.execute('''INSERT INTO CameraTargets(sceneID, camera, target) VALUES (?, ?, ?)''', t)
             conn.commit()
             cursor.execute('''SELECT cameraTargetID FROM CameraTargets WHERE sceneID = ? AND camera = ? AND target = ?''', t)
             ctsID = cursor.fetchone()[0]
@@ -63,21 +74,21 @@ def main(main_dir):
             enumerated_ctss[ctsID] = t
             
     # update all traces
-    enumerated_traces = []
+    enumerated_traces = {}
     for ctsID, (scene, camera, target) in enumerated_ctss.iteritems():
         for confID, conf in enumerate(confs):
             for direction in xrange(conf['direction']['options']['ndirections']):
                 trace_info = files.get_trace_info(main_dir, confID, scene, camera, target, direction)
                 t = (ctsID, confID, direction, trace_info.hash != None, trace_info.last_modified, trace_info.hash)
-                cursor.execute('''INSERT INTO Traces(cameraTargetID, configID, trace, hasTrace, TraceLastModified, TraceHash) VALUES (?, ?, ?, ?, ?, ?)''')
+                cursor.execute('''INSERT INTO Traces(cameraTargetID, configID, trace, hasTrace, TraceLastModified, TraceHash) VALUES (?, ?, ?, ?, ?, ?)''', t)
                 conn.commit()
                 t = (ctsID, confID, direction)
-                cursor.execute('''SELECT traceID FROM Traces WHERE cameraTargetID = ? AND confID = ? AND trace = ?''', t)
+                cursor.execute('''SELECT traceID FROM Traces WHERE cameraTargetID = ? AND configID = ? AND trace = ?''', t)
                 traceID = cursor.fetchone()[0]
-                enumerated_traces.append((traceID, t))
+                enumerated_traces[traceID] = t
     
     # update all frames
-    for traceID, (ctsID, confID, direction) in enumerated_traces:
+    for traceID, (ctsID, confID, direction) in enumerated_traces.iteritems():
         conf = confs[confID]
         duration = conf['duration']
         sample_rate = conf['sample_rate']
@@ -89,7 +100,7 @@ def main(main_dir):
             image_info = files.get_image_info(main_dir, confID, scene, camera, target, direction, frame)
             t = (traceID, frame, framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, image_info.hash != None, image_info.last_modified, image_info.hash)
             cursor.execute('''INSERT INTO Frames(traceID, frame, hasMXS, MXSLastModified, MXSHash, hasImage, imageLastModified, imageHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', t)
-            cursor.commit()
+            conn.commit()
 
 if __name__ == "__main__":
     main(sys.argv[1])

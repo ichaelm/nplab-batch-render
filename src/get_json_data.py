@@ -116,7 +116,7 @@ def get_file_info(file_path):
     return FileInfo(get_file_last_modified(file_path), get_file_hash(file_path))
 
 def filenames(file_paths, extension):
-    return [os.path.splitext(strip_suffix(file_path, extension))[0] for file_path in file_paths]
+    return [os.path.basename(os.path.splitext(strip_suffix(file_path, extension))[0]) for file_path in file_paths]
 
 def get_scenes_with_skp(main_dir):
     return filenames(get_skp_files(main_dir), skp_file_suffix)
@@ -147,9 +147,6 @@ def get_confs(main_dir):
     conf_file_path = conf_dir + conf_file_name
     confs_json = open(conf_file_path).read()
     confs = json.loads(confs_json)
-    for conf in confs:
-        h = conf.__hash__()
-        conf['hash'] = h
     return confs
 
 def get_scene_camera_target_pairs(main_dir, scene):
