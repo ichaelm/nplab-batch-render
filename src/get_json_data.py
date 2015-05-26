@@ -173,9 +173,20 @@ def get_image_path(main_dir, config, scene, camera, target, direction, frame):
 def get_image_info(main_dir, config, scene, camera, target, direction, frame):
     return get_file_info(get_image_path(main_dir, config, scene, camera, target, direction, frame))
 
-
-
-
+def ensure_directory_exists(dirpath):
+    dirnames = []
+    while (dirpath and (dirpath != '/')):
+        (dirpath, dirname) = os.path.split(dirpath)
+        if dirname:
+            dirnames.append(dirname)
+    if dirpath:
+        dirnames.append(dirpath)
+    dirnames.reverse()
+    path = ''
+    for dirname in dirnames:
+        path = os.path.join(path, dirname)
+        if not os.path.isdir(path):
+            os.makedirs(path)
 
 
 
