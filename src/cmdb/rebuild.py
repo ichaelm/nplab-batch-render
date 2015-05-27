@@ -1,6 +1,6 @@
 import sys
 import sqlite3
-import get_json_data as files
+from cmdb import files
 
 conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
 conn.execute('pragma foreign_keys = on')
