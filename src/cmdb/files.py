@@ -4,6 +4,76 @@ from datetime import datetime
 import hashlib
 import os
 
+# /
+# /conf.json
+# /mxs/
+# /mxs/<scene>/
+# /mxs/<scene>/<scene>.mxs
+# /cts/
+# /cts/<scene>.cts.json
+# /trace
+# /trace/config_<config_index>/
+# /trace/config_<config_index>/<scene>/
+# /trace/config_<config_index>/<scene>/<camera_id>_<target_id>_<dir_index>_<speed_index>.ss.json
+
+# confs =
+# [
+#   { 
+#     "motion_type"   : "linear",
+#     "direction"     : {
+#                         "direction_specifier" : "regular_directions_on_plane", 
+#                          "options"            : {
+#                                                   "plane": "xz",
+#                                                   "ndirections": 8
+#                                                 }    
+#                       },
+#     "speed"         : 1.5,
+#     "duration"      : 1  ,
+#     "sample_rate"   : 120          
+#   }
+#   ...
+# ]
+
+# trace =
+# {
+#   "camera_trajectory" : {
+#     "motion_info" : {
+#       "motion_type" : "linear"
+#       "acceleration" : 0
+#       "init_velocity" : [x,y,z]
+#       "init_position" {xyz origin}
+#     },
+#     "sample_rate" : 120,
+#     "trace" : [
+#       {
+#         "zaxis"
+#         "origin"
+#         "xaxis"
+#         "yaxis"
+#       }
+#     ],
+#     "duration" : 1
+#   },
+#   "camera" : {
+#     "id"
+#     "position" : {
+#       "zaxis"
+#       "origin"
+#       "xaxis"
+#       "yaxis"
+#     }
+#   }
+#   "target" : {
+#     "id"
+#     "position" : {
+#       "zaxis"
+#       "origin"
+#       "xaxis"
+#       "yaxis"
+#     }
+#   }
+# }
+
 #constants
 BLOCKSIZE = 65536
 hasher = hashlib.md5()
@@ -191,7 +261,42 @@ def ensure_directory_exists(dirpath):
         if not os.path.isdir(path):
             os.makedirs(path)
 
+def get_scene_cameras(main_dir, scene):
+    cts_path = get_scene_cts_path(main_dir, scene)
+    cts_json = open(cts_path).read()
+    cts = json.loads(cts_json)
+    cameras = {}
+    for camera in cts['cameras']:
+        id = camera['id']
+        pos = camera['position']['origin']
+        cameras[id] = [pos[0], pos[1], pos[2]]
+    return cameras
 
+def get_scene_targets(main_dir, scene):
+    cts_path = get_scene_cts_path(main_dir, scene)
+    cts_json = open(cts_path).read()
+    cts = json.loads(cts_json)
+    cameras = {}
+    for camera in cts['targets']:
+        id = camera['id']
+        pos = camera['position']['origin']
+        cameras[id] = [pos[0], pos[1], pos[2]]
+    return cameras
+
+class TraceStruct:
+    pass
+
+def get_trace(main_dir, config, scene, camera, target, direction):
+    trace_path = get_trace_path(main_dir, config, scene, camera, target, direction)
+    trace_json = open(trace_path).read()
+    trace = json.loads(trace_json)
+    t = TraceStruct()
+    t.target_pos = trace['target']['position']['origin']
+    trajectory = trace['camera_trajectory']['trace']
+    t.trajectory = [pt['origin'] for pt in trajectory]
+    t.velocity = trace['camera_trajectory']['motion_info']['init_velocity']
+    t.framerate = trace['camera_trajectory']['sample_rate']
+    return t
 
     
     

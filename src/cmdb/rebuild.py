@@ -2,19 +2,6 @@ import sys
 import sqlite3
 from cmdb import files
 
-conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
-conn.execute('pragma foreign_keys = on')
-cursor = conn.cursor()
-
-cursor.execute('''DELETE FROM Frames''')
-cursor.execute('''DELETE FROM Traces''')
-cursor.execute('''DELETE FROM CameraTargets''')
-cursor.execute('''DELETE FROM Scenes''')
-cursor.execute('''DELETE FROM Configs''')
-
-
-conn.commit()
-
 def hash_dict(d):
     f = []
     for k, v in d.iteritems():
@@ -25,6 +12,18 @@ def hash_dict(d):
     return hash(frozenset(f))
 
 def main(main_dir):
+    
+    conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
+    conn.execute('pragma foreign_keys = on')
+    cursor = conn.cursor()
+    
+    cursor.execute('''DELETE FROM Frames''')
+    cursor.execute('''DELETE FROM Traces''')
+    cursor.execute('''DELETE FROM CameraTargets''')
+    cursor.execute('''DELETE FROM Scenes''')
+    cursor.execute('''DELETE FROM Configs''')
+    
+    conn.commit()
 
     main_dir = files.ensure_suffix(main_dir, '/')
 
@@ -52,7 +51,7 @@ def main(main_dir):
         mxs_info = files.get_scene_mxs_info(main_dir, scene)
         cts_info = files.get_scene_cts_info(main_dir, scene)
         t = (scene, skp_info.last_modified, skp_info.hash, thumb_info.hash != None, thumb_info.last_modified, thumb_info.hash, mxs_info.hash != None, mxs_info.last_modified, mxs_info.hash, cts_info.hash != None, cts_info.last_modified, cts_info.hash)
-        cursor.execute('''INSERT INTO Scenes(scene, SKPLastModified, SKPHash, hasThumb, ThumbLastModified, ThumbHash, hasMXS, MXSLastModified, MXSHash, hasCTS, CTSLastModified, CTSHash)
+        cursor.execute('''INSERT INTO Scenes(scene, SKPLastModified, SKPHash, hasThumb, thumbLastModified, thumbHash, hasMXS, MXSLastModified, MXSHash, hasCTS, CTSLastModified, CTSHash)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', t)
         conn.commit()
         t = (scene,)
@@ -96,9 +95,9 @@ def main(main_dir):
         cts = enumerated_traces[ctsID]
         (scene, camera, target) = cts
         for frame in xrange(num_frames):
-            framemxs_info = files.get_frame_mxs_info(main_dir, confID, scene, camera, target, direction, frame)
-            image_info = files.get_image_info(main_dir, confID, scene, camera, target, direction, frame)
-            t = (traceID, frame, framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, image_info.hash != None, image_info.last_modified, image_info.hash)
+            #framemxs_info = files.get_frame_mxs_info(main_dir, confID, scene, camera, target, direction, frame)
+            #image_info = files.get_image_info(main_dir, confID, scene, camera, target, direction, frame)
+            t = (traceID, frame, 0, None, None, 0, None, None)
             cursor.execute('''INSERT INTO Frames(traceID, frame, hasMXS, MXSLastModified, MXSHash, hasImage, imageLastModified, imageHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', t)
             conn.commit()
 
