@@ -32,42 +32,49 @@ def main(main_dir):
     pmscene_memo = {}
     
     cursor.execute('''SELECT configID, scene, camera, target, trace, frame FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE Frames.hasMXS = 0''')
-    for conf, scene, camera, target, trace, frame in cursor:
+    for conf, scene, camera, target, trace, frame in cursor.fetchall():
         try:
             pmscene = pmscene_memo[scene]
         except:
             pmscene = pm.Cmaxwell(pm.mwcallback);
-            ok = scene.readMXS(files.get_scene_mxs_path(main_dir, scene));
+            ok = pmscene.readMXS(files.get_scene_mxs_path(main_dir, scene));
             if ok == 0:
                 print("Error reading scene");
                 return;
             pmscene_memo[scene] = pmscene
-        camera = scene.getActiveCamera();
-        _,_,_,focalLength,fStop,_,_ = camera.getStep(0);
-        print('focalLength = ' + str(focalLength))
-        print('fStop = ' + str(fStop))
         try:
-            trace = trace_memo[(conf, scene, camera, target, trace)]
+            trace_struct = trace_memo[(conf, scene, camera, target, trace)]
         except:
-            trace = files.get_trace(main_dir, conf, scene, camera, target, trace)
-            trace_memo[(conf, scene, camera, target, trace)] = trace
-        camera_pos_vec = to_vec(inches_to_meters(trace.trajectory[frame]))
-        target_pos_vec = to_vec(inches_to_meters(trace.target_pos))
-        velocity_vec = to_vec(inches_to_meters(trace.velocity))
-        framerate = trace.framerate
+            trace_struct = files.get_trace(main_dir, conf, scene, camera, target, trace)
+            t = (scene, camera, target, conf, trace)
+            c = conn.cursor()
+            c.execute('''SELECT traceID FROM Traces WHERE cameraTargetID = (SELECT cameraTargetID FROM CameraTargets WHERE sceneID = (SELECT sceneID FROM Scenes WHERE scene = ?) AND camera = ? AND target = ?) and configID = ? and trace = ?''', t)
+            trace_struct.id = c.fetchone()[0]
+            trace_memo[(conf, scene, camera, target, trace)] = trace_struct
+        camera_pos_vec = to_vec(inches_to_meters(trace_struct.trajectory[frame]))
+        target_pos_vec = to_vec(inches_to_meters(trace_struct.target_pos))
+        velocity_vec = to_vec(inches_to_meters(trace_struct.velocity))
+        framerate = trace_struct.framerate
         camera_end_vec = camera_pos_vec + (velocity_vec * (1.0/framerate))
         shutter = 0.5 / framerate
         pmcamera = pmscene.addCamera('name', 2, shutter, 0.1, 0.1, 100, 'CIRCULAR', 90, 1, framerate, 1024, 1024, 1)
-        camera_up_vec = [0.0, 0.0, 1.0]
+        camera_up_vec = to_vec([0.0, 0.0, 1.0])
+        fStop = 5.6
+        focalLength = 0.050
         pmcamera.setStep(0,camera_pos_vec,target_pos_vec,camera_up_vec,focalLength,fStop,0); 
         pmcamera.setStep(1,camera_end_vec,target_pos_vec,camera_up_vec,focalLength,fStop,1);
         pmcamera.setActive()
         framemxs_path = files.get_frame_mxs_path(main_dir, conf, scene, camera, target, trace, frame)
         files.ensure_directory_exists(os.path.dirname(framemxs_path))
-        ok = scene.writeMXS(framemxs_path);
+        ok = pmscene.writeMXS(framemxs_path);
         if ok == 0:
             print("Error saving frame");
             return;
+        framemxs_info = files.get_frame_mxs_info(main_dir, conf, scene, camera, target, trace, frame)
+        c = conn.cursor()
+        c.execute('''UPDATE OR FAIL Frames SET hasMXS = 1, MXSLastModified = ?, MXSHash = ? WHERE traceID = ? AND frame = ?''', (framemxs_info.last_modified, framemxs_info.hash, trace_struct.id, frame))
+        conn.commit()
+    conn.close()
 
 if __name__ == "__main__":
     main(sys.argv[1])
