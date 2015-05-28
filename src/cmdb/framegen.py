@@ -72,7 +72,7 @@ def main(main_dir):
             return;
         framemxs_info = files.get_frame_mxs_info(main_dir, conf, scene, camera, target, trace, frame)
         c = conn.cursor()
-        c.execute('''UPDATE OR FAIL Frames SET hasMXS = 1, MXSLastModified = ?, MXSHash = ? WHERE traceID = ? AND frame = ?''', (framemxs_info.last_modified, framemxs_info.hash, trace_struct.id, frame))
+        c.execute('''UPDATE Frames SET hasMXS = 1, MXSLastModified = ?, MXSHash = ? WHERE traceID = ? AND frame = ?''', (framemxs_info.last_modified, framemxs_info.hash, trace_struct.id, frame))
         conn.commit()
     conn.close()
 

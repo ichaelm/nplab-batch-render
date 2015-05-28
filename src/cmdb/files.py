@@ -154,8 +154,11 @@ def get_scene_skp_path(main_dir, scene):
 def get_scene_thumbs_path(main_dir, scene):
     return main_dir + thumbs_dir_name + '/' + str(scene) + image_file_suffix
 
+def get_scene_mxs_dir(main_dir, scene):
+    return main_dir + mxs_dir_name + '/' + str(scene) + '/'
+
 def get_scene_mxs_path(main_dir, scene):
-    return main_dir + mxs_dir_name + '/' + str(scene) + '/' + str(scene) + mxs_file_suffix
+    return get_scene_mxs_dir(main_dir, scene) + str(scene) + mxs_file_suffix
 
 def get_scene_cts_path(main_dir, scene):
     return main_dir + cts_dir_name + '/' + str(scene) + cts_file_suffix
