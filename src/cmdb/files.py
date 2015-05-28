@@ -267,9 +267,9 @@ def get_scene_cameras(main_dir, scene):
     cts = json.loads(cts_json)
     cameras = {}
     for camera in cts['cameras']:
-        id = camera['id']
+        cid = camera['id']
         pos = camera['position']['origin']
-        cameras[id] = [pos[0], pos[1], pos[2]]
+        cameras[cid] = [pos[0], pos[1], pos[2]]
     return cameras
 
 def get_scene_targets(main_dir, scene):
@@ -278,9 +278,9 @@ def get_scene_targets(main_dir, scene):
     cts = json.loads(cts_json)
     cameras = {}
     for camera in cts['targets']:
-        id = camera['id']
+        cid = camera['id']
         pos = camera['position']['origin']
-        cameras[id] = [pos[0], pos[1], pos[2]]
+        cameras[cid] = [pos[0], pos[1], pos[2]]
     return cameras
 
 class TraceStruct:
