@@ -22,7 +22,7 @@ cp ${DIR}/src/batch-render ~/bin/
 cp ${DIR}/src/batch-render-stream ~/bin/
 cp ${DIR}/src/render-thread.pbs ~/bin/
 cp ${DIR}/src/render-thread-stream.pbs ~/bin/
-cp ${DIR}/src/nplab_framegen.py ~/python-packages/
+cp -r ${DIR}/src/cmdb ~/python-packages
 cp ${DIR}/src/framegen-render ~/bin/
 cp ${DIR}/src/framegen-pipe.pbs ~/bin/
 
