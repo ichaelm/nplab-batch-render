@@ -31,7 +31,7 @@ def main(main_dir):
     trace_memo = {}
     pmscene_memo = {}
     
-    cursor.execute('''SELECT configID, scene, camera, target, trace, frame FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE Frames.hasMXS = 0''')
+    cursor.execute('''SELECT configID, scene, camera, target, trace, frame FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE hasFrameMXS = 0''')
     for conf, scene, camera, target, trace, frame in cursor.fetchall():
         try:
             pmscene = pmscene_memo[scene]
@@ -72,7 +72,7 @@ def main(main_dir):
             return;
         framemxs_info = files.get_frame_mxs_info(main_dir, conf, scene, camera, target, trace, frame)
         c = conn.cursor()
-        c.execute('''UPDATE Frames SET hasMXS = 1, MXSLastModified = ?, MXSHash = ? WHERE traceID = ? AND frame = ?''', (framemxs_info.last_modified, framemxs_info.hash, trace_struct.id, frame))
+        c.execute('''UPDATE Frames SET hasFrameMXS = 1, FrameMXSLastModified = ?, FrameMXSHash = ? WHERE traceID = ? AND frame = ?''', (framemxs_info.last_modified, framemxs_info.hash, trace_struct.id, frame))
         conn.commit()
     conn.close()
 

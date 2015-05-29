@@ -98,7 +98,7 @@ def main(main_dir):
             #framemxs_info = files.get_frame_mxs_info(main_dir, confID, scene, camera, target, direction, frame)
             #image_info = files.get_image_info(main_dir, confID, scene, camera, target, direction, frame)
             t = (traceID, frame, 0, None, None, 0, None, None)
-            cursor.execute('''INSERT INTO Frames(traceID, frame, hasMXS, MXSLastModified, MXSHash, hasImage, imageLastModified, imageHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', t)
+            cursor.execute('''INSERT INTO Frames(traceID, frame, hasFrameMXS, FrameMXSLastModified, FrameMXSHash, hasImage, imageLastModified, imageHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', t)
             conn.commit()
 
 if __name__ == "__main__":
