@@ -13,7 +13,7 @@ def hash_dict(d):
 
 def main(main_dir):
     
-    conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
+    conn = sqlite3.connect('/home/mls278/database/nplab_render.db', 60)
     conn.execute('pragma foreign_keys = on')
     cursor = conn.cursor()
     

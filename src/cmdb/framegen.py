@@ -24,7 +24,7 @@ def inches_to_meters(pt):
 
 def main(main_dir):
 
-    conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
+    conn = sqlite3.connect('/home/mls278/database/nplab_render.db', 60)
     conn.execute('pragma foreign_keys = on')
     cursor = conn.cursor()
     
@@ -69,8 +69,7 @@ def main(main_dir):
             print("Error saving frame");
             return;
         framemxs_info = files.get_frame_mxs_info(main_dir, conf, scene, camera, target, trace, frame)
-        c = conn.cursor()
-        c.execute('''UPDATE Frames SET hasFrameMXS = ?, FrameMXSLastModified = ?, FrameMXSHash = ? WHERE frameID = ?''', (framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, frameID))
+        conn.execute('''UPDATE Frames SET hasFrameMXS = ?, FrameMXSLastModified = ?, FrameMXSHash = ? WHERE frameID = ?''', (framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, frameID))
         conn.commit()
     conn.close()
 

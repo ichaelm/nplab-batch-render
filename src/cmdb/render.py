@@ -6,7 +6,7 @@ from cmdb import files
 
 def main(main_dir):
 
-    conn = sqlite3.connect('/home/mls278/database/nplab_render.db')
+    conn = sqlite3.connect('/home/mls278/database/nplab_render.db', 60)
     conn.execute('pragma foreign_keys = on')
     cursor = conn.cursor()
     
@@ -23,8 +23,7 @@ def main(main_dir):
                          '-output:' + image_path, '-dep:' + mxs_dir,
                          '-dep:"/usr/local/maxwell-3.0/materials database/textures"',])
         image_info = files.get_image_info(main_dir, conf, scene, camera, target, trace, frame)
-        c = conn.cursor()
-        c.execute('''UPDATE Frames SET hasImage = ?, imageLastModified = ?, imageHash = ? WHERE frameID = ?''', (image_info.hash != None, image_info.last_modified, image_info.hash, frameID))
+        conn.execute('''UPDATE Frames SET hasImage = ?, imageLastModified = ?, imageHash = ? WHERE frameID = ?''', (image_info.hash != None, image_info.last_modified, image_info.hash, frameID))
         conn.commit()
     conn.close()
 
