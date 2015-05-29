@@ -10,6 +10,8 @@ def main(main_dir):
     conn.execute('pragma foreign_keys = on')
     cursor = conn.cursor()
     
+    main_dir = files.ensure_suffix(main_dir, '/')
+    
     cursor.execute('''SELECT configID, scene, camera, target, trace, frame, frameID FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE hasFrameMXS != 0 AND hasImage = 0''')
     for conf, scene, camera, target, trace, frame, frameID in cursor.fetchall():
         mxs_dir = files.get_scene_mxs_dir(main_dir, scene)

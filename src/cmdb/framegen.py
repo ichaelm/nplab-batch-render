@@ -28,6 +28,8 @@ def main(main_dir):
     conn.execute('pragma foreign_keys = on')
     cursor = conn.cursor()
     
+    main_dir = files.ensure_suffix(main_dir, '/')
+    
     trace_memo = {}
     pmscene_memo = {}
     
