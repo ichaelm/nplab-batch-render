@@ -62,11 +62,14 @@ CREATE TABLE Frames(
   hasImage BOOL NOT NULL,
   imageLastModified DATETIME,
   imageHash VARCHAR(255),
+  lockedBy INTEGER,
+  lockTime DATETIME,
   FOREIGN KEY(traceID) REFERENCES Traces(traceID),
   UNIQUE(traceID, frame)
 );
 
 CREATE INDEX idx_Frames_hasFrameMXS ON Frames(hasFrameMXS);
 CREATE INDEX idx_Frames_hasImage ON Frames(hasImage);
+CREATE INDEX idx_Frames_lockedBy ON Frames(lockedBy);
 CREATE INDEX idx_Frames_traceID ON Frames(traceID);
 CREATE UNIQUE INDEX idx_Frames_traceID_frame ON Frames(traceID, frame);
