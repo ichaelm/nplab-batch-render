@@ -66,7 +66,7 @@ CREATE TABLE Frames(
   UNIQUE(traceID, frame)
 );
 
-CREATE INDEX idx_Frames_hasMXS ON Frames(hasMXS);
+CREATE INDEX idx_Frames_hasFrameMXS ON Frames(hasFrameMXS);
 CREATE INDEX idx_Frames_hasImage ON Frames(hasImage);
 CREATE INDEX idx_Frames_traceID ON Frames(traceID);
 CREATE UNIQUE INDEX idx_Frames_traceID_frame ON Frames(traceID, frame);
