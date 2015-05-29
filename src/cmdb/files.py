@@ -238,13 +238,13 @@ def get_trace_info(main_dir, config, scene, camera, target, direction):
     return get_file_info(get_trace_path(main_dir, config, scene, camera, target, direction))
 
 def get_frame_mxs_path(main_dir, config, scene, camera, target, direction, frame):
-    return main_dir + framemxs_dir_name + '/' + 'config_' + str(config) + '/' + str(scene) + '/' + str(camera) + '_' + str(target) + '/' + str(scene) + '_' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + '_frame_' + str(frame) + mxs_file_suffix
+    return main_dir + framemxs_dir_name + '/' + 'config_' + str(config) + '/' + str(scene) + '/' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + '/' + str(scene) + '_' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + '_frame_' + str(frame) + mxs_file_suffix
 
 def get_frame_mxs_info(main_dir, config, scene, camera, target, direction, frame):
     return get_file_info(get_frame_mxs_path(main_dir, config, scene, camera, target, direction, frame))
 
 def get_image_path(main_dir, config, scene, camera, target, direction, frame):
-    return main_dir + image_dir_name + '/' + 'config_' + str(config) + '/' + str(scene) + '/' + str(camera) + '_' + str(target) + '/' + str(scene) + '_' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + '_frame_' + str(frame) + image_file_suffix
+    return main_dir + image_dir_name + '/' + 'config_' + str(config) + '/' + str(scene) + '/' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + '/' + str(scene) + '_' + str(camera) + '_' + str(target) + '_' + str(direction) + '_0' + '_frame_' + str(frame) + image_file_suffix
 
 def get_image_info(main_dir, config, scene, camera, target, direction, frame):
     return get_file_info(get_image_path(main_dir, config, scene, camera, target, direction, frame))

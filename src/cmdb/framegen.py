@@ -2,7 +2,7 @@ import pymaxwell as pm
 import sys
 from cmdb import files
 import sqlite3
-import os
+import os #remove
 
 meters_per_inch = 0.0254
 
