@@ -33,8 +33,8 @@ def main(main_dir):
     trace_memo = {}
     pmscene_memo = {}
     
-    cursor.execute('''SELECT configID, scene, camera, target, trace, frame FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE hasFrameMXS = 0''')
-    for conf, scene, camera, target, trace, frame in cursor.fetchall():
+    cursor.execute('''SELECT configID, scene, camera, target, trace, frame, frameID FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE hasFrameMXS = 0''')
+    for conf, scene, camera, target, trace, frame, frameID in cursor.fetchall():
         try:
             pmscene = pmscene_memo[scene]
         except:
@@ -48,10 +48,6 @@ def main(main_dir):
             trace_struct = trace_memo[(conf, scene, camera, target, trace)]
         except:
             trace_struct = files.get_trace(main_dir, conf, scene, camera, target, trace)
-            t = (scene, camera, target, conf, trace)
-            c = conn.cursor()
-            c.execute('''SELECT traceID FROM Traces WHERE cameraTargetID = (SELECT cameraTargetID FROM CameraTargets WHERE sceneID = (SELECT sceneID FROM Scenes WHERE scene = ?) AND camera = ? AND target = ?) and configID = ? and trace = ?''', t)
-            trace_struct.id = c.fetchone()[0]
             trace_memo[(conf, scene, camera, target, trace)] = trace_struct
         camera_pos_vec = to_vec(inches_to_meters(trace_struct.trajectory[frame]))
         target_pos_vec = to_vec(inches_to_meters(trace_struct.target_pos))
@@ -74,7 +70,7 @@ def main(main_dir):
             return;
         framemxs_info = files.get_frame_mxs_info(main_dir, conf, scene, camera, target, trace, frame)
         c = conn.cursor()
-        c.execute('''UPDATE Frames SET hasFrameMXS = ?, FrameMXSLastModified = ?, FrameMXSHash = ? WHERE traceID = ? AND frame = ?''', (framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, trace_struct.id, frame))
+        c.execute('''UPDATE Frames SET hasFrameMXS = ?, FrameMXSLastModified = ?, FrameMXSHash = ? WHERE frameID = ?''', (framemxs_info.hash != None, framemxs_info.last_modified, framemxs_info.hash, frameID))
         conn.commit()
     conn.close()
 
