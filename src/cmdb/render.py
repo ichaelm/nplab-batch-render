@@ -6,6 +6,8 @@ import time
 import random
 from cmdb import files
 
+_locks_per_batch = 5
+
 def main(main_dir):
 
     conn = sqlite3.connect('/home/mls278/database/nplab_render.db', 60)
@@ -24,10 +26,11 @@ def main(main_dir):
             jobID = random.randrange(1000000000)
     
     while True:
-        conn.execute('''UPDATE Frames SET lockedBy = ?, lockTime = DATETIME("now") WHERE frameID IN (SELECT frameID FROM Frames WHERE lockedBy IS NULL AND hasFrameMXS != 0 AND hasImage = 0 LIMIT 1)''', (jobID,))
+        conn.execute('''UPDATE Frames SET lockedBy = ?, lockTime = DATETIME("now") WHERE frameID IN (SELECT frameID FROM Frames WHERE lockedBy IS NULL AND hasFrameMXS != 0 AND hasImage = 0 LIMIT ?)''', (jobID, _locks_per_batch))
         conn.commit()
         cursor.execute('''SELECT configID, scene, camera, target, trace, frame, frameID FROM Scenes NATURAL JOIN CameraTargets NATURAL JOIN Traces NATURAL JOIN Frames WHERE lockedBy = ?''', (jobID,))
         tuples = cursor.fetchall()
+        update_tuples = []
         if not tuples:
             break;
         for t in tuples:
@@ -41,10 +44,9 @@ def main(main_dir):
                              '-output:' + image_path, '-dep:' + mxs_dir,
                              '-dep:"/usr/local/maxwell-3.0/materials database/textures"',])
             image_info = files.get_image_info(main_dir, conf, scene, camera, target, trace, frame)
-            start = time.time()
-            conn.execute('''UPDATE Frames SET hasImage = ?, imageLastModified = ?, imageHash = ?, lockedBy = NULL, lockTime = NULL WHERE frameID = ?''', (image_info.hash != None, image_info.last_modified, image_info.hash, frameID))
-            conn.commit()
-            print("elapsed: " + str(time.time() - start))
+            update_tuples.append((image_info.hash != None, image_info.last_modified, image_info.hash, frameID))
+        conn.executemany('''UPDATE Frames SET hasImage = ?, imageLastModified = ?, imageHash = ?, lockedBy = NULL, lockTime = NULL WHERE frameID = ?''', update_tuples)
+        conn.commit()
     conn.close()
     print("exited normally")
 
